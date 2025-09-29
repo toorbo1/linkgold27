@@ -6,39 +6,54 @@
     <title>Telegram Community</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { background: #f0f2f5; padding: 20px; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
-        .card { background: white; padding: 20px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        button { background: #0088cc; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        .card { background: rgba(255,255,255,0.95); padding: 25px; margin: 15px 0; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        button { background: #0088cc; color: white; border: none; padding: 12px 24px; margin: 8px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #006699; }
+        button.admin { background: #dc3545; }
+        button.admin:hover { background: #c82333; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
         .hidden { display: none; }
-        .post { border: 1px solid #eee; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .post { border: 2px solid #e9ecef; padding: 20px; margin: 15px 0; border-radius: 10px; background: white; }
+        .user-info { background: #e3f2fd; padding: 15px; border-radius: 10px; margin: 15px 0; }
+        h1 { color: #333; text-align: center; margin-bottom: 10px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; text-align: center; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
-            <h1>✅ Server is Running!</h1>
-            <p>Telegram Community Application</p>
-            <button onclick="testConnection()">Test Connection</button>
-            <div id="status"></div>
-        </div>
-
-        <div class="card">
-            <h3>Demo Interface</h3>
-            <button onclick="login(123456789)">Login as User</button>
-            <button onclick="login(8036875641)">Login as Admin</button>
+            <h1>🤖 Telegram Community</h1>
+            <div id="connectionStatus" class="status">Checking connection...</div>
             
-            <div id="adminPanel" class="hidden">
-                <h4>Admin Panel</h4>
-                <input type="text" id="postTitle" placeholder="Post title">
-                <textarea id="postContent" placeholder="Post content" rows="3"></textarea>
-                <button onclick="createPost()">Create Post</button>
+            <div id="authSection">
+                <h3>🔐 Авторизация</h3>
+                <button onclick="login(123456789)">👤 Войти как пользователь</button>
+                <button onclick="login(8036875641)" class="admin">👑 Войти как Администратор</button>
+            </div>
+            
+            <div id="userSection" class="hidden">
+                <div class="user-info">
+                    <h3>👤 Профиль пользователя</h3>
+                    <div id="userInfo"></div>
+                    <button onclick="logout()">🚪 Выйти</button>
+                </div>
             </div>
         </div>
 
+        <div id="adminSection" class="card hidden">
+            <h3>⚙️ Панель администратора</h3>
+            <input type="text" id="postTitle" placeholder="📝 Заголовок поста">
+            <textarea id="postContent" placeholder="📄 Текст поста" rows="4"></textarea>
+            <button onclick="createPost()">📤 Опубликовать пост</button>
+        </div>
+
         <div class="card">
-            <h3>Posts</h3>
-            <div id="postsContainer">Loading...</div>
+            <h3>📰 Последние новости сообщества</h3>
+            <div id="postsContainer">Загрузка новостей...</div>
         </div>
     </div>
 
@@ -46,40 +61,59 @@
         let currentUser = null;
         const ADMIN_ID = 8036875641;
 
-        async function testConnection() {
+        // Проверка соединения при загрузке
+        async function checkConnection() {
             try {
                 const response = await fetch('/health');
                 const data = await response.json();
-                document.getElementById('status').innerHTML = 
-                    `<p style="color: green;">✅ Connected: ${data.message}</p>`;
+                document.getElementById('connectionStatus').className = 'status success';
+                document.getElementById('connectionStatus').innerHTML = 
+                    `✅ Сервер работает: ${data.message} (Порт: ${data.port})`;
+                console.log('Server connection OK:', data);
+                return true;
             } catch (error) {
-                document.getElementById('status').innerHTML = 
-                    `<p style="color: red;">❌ Connection failed</p>`;
+                document.getElementById('connectionStatus').className = 'status error';
+                document.getElementById('connectionStatus').innerHTML = 
+                    '❌ Ошибка соединения с сервером';
+                console.error('Server connection failed:', error);
+                return false;
             }
         }
 
+        // Загрузка постов
         async function loadPosts() {
             try {
                 const response = await fetch('/api/posts');
+                if (!response.ok) throw new Error('HTTP error');
+                
                 const posts = await response.json();
                 displayPosts(posts);
             } catch (error) {
-                document.getElementById('postsContainer').innerHTML = 'Error loading posts';
+                document.getElementById('postsContainer').innerHTML = 
+                    '<div class="post">❌ Ошибка загрузки новостей</div>';
             }
         }
 
         function displayPosts(posts) {
             const container = document.getElementById('postsContainer');
+            
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div class="post">📝 Пока нет новостей. Будьте первым!</div>';
+                return;
+            }
+
             container.innerHTML = posts.map(post => `
                 <div class="post">
                     <h4>${post.title}</h4>
                     <p>${post.content}</p>
+                    <small>📅 Опубликовано: ${new Date(post.created_at).toLocaleDateString('ru-RU')}</small>
                     ${currentUser && currentUser.id === ADMIN_ID ? 
-                        `<button onclick="deletePost(${post.id})">Delete</button>` : ''}
+                        `<br><button onclick="deletePost(${post.id})" class="admin">🗑️ Удалить</button>` : ''}
                 </div>
             `).join('');
         }
 
+        // Авторизация
         async function login(userId) {
             try {
                 const response = await fetch('/api/users', {
@@ -87,27 +121,66 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         telegram_id: userId,
-                        first_name: userId === ADMIN_ID ? 'Admin' : 'User'
+                        first_name: userId === ADMIN_ID ? 'Администратор' : 'Пользователь',
+                        last_name: 'Системы',
+                        username: userId === ADMIN_ID ? 'admin' : 'user'
                     })
                 });
+
+                if (!response.ok) throw new Error('Login failed');
                 
                 currentUser = await response.json();
-                if (userId === ADMIN_ID) {
-                    document.getElementById('adminPanel').classList.remove('hidden');
-                }
+                showUserInterface();
                 loadPosts();
-                alert('Logged in successfully!');
+                
+                alert(`✅ Успешный вход! Добро пожаловать, ${currentUser.first_name}`);
+                
             } catch (error) {
-                alert('Login failed');
+                alert('❌ Ошибка входа');
             }
         }
 
+        function showUserInterface() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('userSection').classList.remove('hidden');
+            
+            const isAdmin = currentUser.id === ADMIN_ID;
+            document.getElementById('userInfo').innerHTML = `
+                <p><strong>🆔 ID:</strong> ${currentUser.id}</p>
+                <p><strong>👤 Имя:</strong> ${currentUser.first_name} ${currentUser.last_name}</p>
+                <p><strong>🎯 Роль:</strong> ${isAdmin ? '👑 Администратор' : '👤 Пользователь'}</p>
+            `;
+
+            if (isAdmin) {
+                document.getElementById('adminSection').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('userSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
+            loadPosts();
+        }
+
+        // Создание поста
         async function createPost() {
-            const title = document.getElementById('postTitle').value;
-            const content = document.getElementById('postContent').value;
+            if (!currentUser || currentUser.id !== ADMIN_ID) {
+                alert('❌ Только администратор может публиковать посты');
+                return;
+            }
+
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+
+            if (!title || !content) {
+                alert('❌ Заполните все поля');
+                return;
+            }
 
             try {
-                await fetch('/api/posts', {
+                const response = await fetch('/api/posts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -117,28 +190,46 @@
                     })
                 });
 
+                if (!response.ok) throw new Error('Failed to create post');
+
                 document.getElementById('postTitle').value = '';
                 document.getElementById('postContent').value = '';
-                loadPosts();
-                alert('Post created!');
+                await loadPosts();
+                alert('✅ Пост успешно опубликован!');
+                
             } catch (error) {
-                alert('Error creating post');
+                alert('❌ Ошибка при публикации поста');
             }
         }
 
+        // Удаление поста
         async function deletePost(postId) {
+            if (!currentUser || currentUser.id !== ADMIN_ID) return;
+
+            if (!confirm('❓ Вы уверены, что хотите удалить этот пост?')) return;
+
             try {
-                await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
-                loadPosts();
-                alert('Post deleted!');
+                const response = await fetch(`/api/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete post');
+
+                await loadPosts();
+                alert('✅ Пост успешно удален!');
+                
             } catch (error) {
-                alert('Error deleting post');
+                alert('❌ Ошибка при удалении поста');
             }
         }
 
-        // Initial load
-        testConnection();
-        loadPosts();
+        // Инициализация
+        window.addEventListener('load', async () => {
+            const connected = await checkConnection();
+            if (connected) {
+                await loadPosts();
+            }
+        });
     </script>
 </body>
 </html>

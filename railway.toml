@@ -3,8 +3,11 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "node server.js"
-restartPolicyType = "on_failure"
 
 [[services]]
 name = "web"
-httpPort = 3000
+httpPort = 8080
+
+[services.concurrency]
+softLimit = 100
+hardLimit = 100
