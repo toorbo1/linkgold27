@@ -441,6 +441,9 @@
     <div id="notification" class="notification">Текст уведомления</div>
     
     <script>
+        // API базовый URL
+        const API_BASE = window.location.origin + '/api';
+        
         // DOM элементы
         const loginButton = document.getElementById('loginButton');
         const logoutButton = document.getElementById('logoutButton');
@@ -468,13 +471,13 @@
         const ADMIN_ID = 8036875641; // ID администратора
         
         // Инициализация приложения
-        function initApp() {
+        async function initApp() {
             // Проверяем, есть ли сохраненные данные пользователя
             const savedUser = localStorage.getItem('telegramUser');
             if (savedUser) {
                 try {
                     user = JSON.parse(savedUser);
-                    handleUserLogin(user);
+                    await handleUserLogin(user);
                 } catch (e) {
                     console.error('Ошибка при загрузке пользователя:', e);
                     localStorage.removeItem('telegramUser');
@@ -482,7 +485,7 @@
             }
             
             // Загружаем посты
-            loadPosts();
+            await loadPosts();
             
             // Настройка обработчиков событий
             setupEventListeners();
@@ -497,19 +500,43 @@
         }
         
         // Обработка входа через Telegram
-        function handleTelegramLogin() {
-            // В реальном приложении здесь будет логика авторизации через Telegram
-            // Для демонстрации используем тестовые данные
-            const testUser = {
-                id: Math.floor(Math.random() * 1000000000),
-                first_name: 'Тестовый',
-                last_name: 'Пользователь',
-                username: 'test_user',
-                photo_url: 'https://via.placeholder.com/150/0088cc/FFFFFF?text=User'
-            };
-            
-            handleUserLogin(testUser);
-            showNotification('Успешный вход через Telegram!');
+        async function handleTelegramLogin() {
+            try {
+                // В реальном приложении здесь будет логика авторизации через Telegram
+                // Для демонстрации используем тестовые данные
+                const testUser = {
+                    id: Math.floor(Math.random() * 1000000000),
+                    first_name: 'Тестовый',
+                    last_name: 'Пользователь',
+                    username: 'test_user',
+                    photo_url: 'https://via.placeholder.com/150/0088cc/FFFFFF?text=User'
+                };
+                
+                // Регистрируем пользователя в базе данных
+                const response = await fetch(`${API_BASE}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        telegram_id: testUser.id,
+                        first_name: testUser.first_name,
+                        last_name: testUser.last_name,
+                        username: testUser.username,
+                        photo_url: testUser.photo_url
+                    })
+                });
+                
+                if (response.ok) {
+                    await handleUserLogin(testUser);
+                    showNotification('Успешный вход через Telegram!');
+                } else {
+                    throw new Error('Ошибка регистрации пользователя');
+                }
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                showNotification('Ошибка входа', true);
+            }
         }
         
         // Обработка выхода
@@ -528,7 +555,7 @@
         }
         
         // Обработка данных пользователя после входа
-        function handleUserLogin(userData) {
+        async function handleUserLogin(userData) {
             user = userData;
             
             // Сохраняем пользователя в localStorage
@@ -569,11 +596,11 @@
             referralSection.classList.remove('hidden');
             
             // Генерируем реферальную ссылку
-            const refLink = `https://t.me/your_bot?start=ref_${user.id}`;
+            const refLink = `${window.location.origin}?ref=${user.id}`;
             referralLink.value = refLink;
             
             // Загружаем реферальную статистику
-            loadReferralStats(user.id);
+            await loadReferralStats(user.id);
             
             // Проверяем, является ли пользователь администратором
             if (user.id === ADMIN_ID) {
@@ -584,37 +611,19 @@
         }
         
         // Загрузка постов
-        function loadPosts() {
-            // В реальном приложении здесь будет запрос к серверу
-            // Для демонстрации используем тестовые данные
-            setTimeout(() => {
-                const testPosts = [
-                    {
-                        id: 1,
-                        title: 'Добро пожаловать в наше сообщество!',
-                        content: 'Мы рады приветствовать вас в нашем Telegram-сообществе. Здесь вы найдете много интересной информации и сможете общаться с единомышленниками.',
-                        date: '2023-10-15T10:30:00Z',
-                        author: 'Администратор'
-                    },
-                    {
-                        id: 2,
-                        title: 'Обновление системы рефералов',
-                        content: 'Мы улучшили нашу реферальную систему. Теперь за каждого приглашенного друга вы получаете дополнительные бонусы. Подробности в разделе "Реферальная система".',
-                        date: '2023-10-10T14:45:00Z',
-                        author: 'Администратор'
-                    },
-                    {
-                        id: 3,
-                        title: 'Новые функции сайта',
-                        content: 'Мы добавили новые функции на наш сайт: улучшенный профиль, статистика рефералов и админ-панель для публикации новостей.',
-                        date: '2023-10-05T09:15:00Z',
-                        author: 'Администратор'
-                    }
-                ];
-                
-                posts = testPosts;
-                renderPosts();
-            }, 1000); // Имитация загрузки с сервера
+        async function loadPosts() {
+            try {
+                const response = await fetch(`${API_BASE}/posts`);
+                if (response.ok) {
+                    posts = await response.json();
+                    renderPosts();
+                } else {
+                    throw new Error('Ошибка загрузки постов');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки постов:', error);
+                postsContainer.innerHTML = '<div class="empty-state">Ошибка загрузки новостей</div>';
+            }
         }
         
         // Отображение постов
@@ -626,14 +635,11 @@
                 return;
             }
             
-            // Сортируем посты по дате (новые сначала)
-            const sortedPosts = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            sortedPosts.forEach(post => {
+            posts.forEach(post => {
                 const postElement = document.createElement('div');
                 postElement.className = 'post';
                 
-                const date = new Date(post.date).toLocaleDateString('ru-RU', {
+                const date = new Date(post.created_at).toLocaleDateString('ru-RU', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -654,16 +660,21 @@
         }
         
         // Загрузка реферальной статистики
-        function loadReferralStats(userId) {
-            // В реальном приложении здесь будет запрос к серверу
-            // Для демонстрации используем тестовые данные
-            const stats = {
-                count: Math.floor(Math.random() * 10),
-                bonus: Math.floor(Math.random() * 500)
-            };
-            
-            referralsCount.textContent = stats.count;
-            referralBonus.textContent = stats.bonus;
+        async function loadReferralStats(userId) {
+            try {
+                const response = await fetch(`${API_BASE}/users/${userId}/referrals`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    referralsCount.textContent = stats.referral_count;
+                    referralBonus.textContent = stats.bonus;
+                } else {
+                    throw new Error('Ошибка загрузки статистики');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+                referralsCount.textContent = '0';
+                referralBonus.textContent = '0';
+            }
         }
         
         // Копирование реферальной ссылки
@@ -685,7 +696,7 @@
         }
         
         // Обработка отправки поста
-        function handlePostSubmit(e) {
+        async function handlePostSubmit(e) {
             e.preventDefault();
             
             if (!user || user.id !== ADMIN_ID) {
@@ -701,23 +712,34 @@
                 return;
             }
             
-            // В реальном приложении здесь будет отправка данных на сервер
-            // Для демонстрации добавляем пост локально
-            const newPost = {
-                id: posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1,
-                title,
-                content,
-                date: new Date().toISOString(),
-                author: 'Администратор'
-            };
-            
-            posts.unshift(newPost);
-            renderPosts();
-            
-            // Очищаем форму
-            postForm.reset();
-            
-            showNotification('Пост успешно опубликован!');
+            try {
+                const response = await fetch(`${API_BASE}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        author_id: user.id
+                    })
+                });
+                
+                if (response.ok) {
+                    // Очищаем форму
+                    postForm.reset();
+                    
+                    // Перезагружаем посты
+                    await loadPosts();
+                    
+                    showNotification('Пост успешно опубликован!');
+                } else {
+                    throw new Error('Ошибка публикации поста');
+                }
+            } catch (error) {
+                console.error('Ошибка публикации поста:', error);
+                showNotification('Ошибка публикации поста', true);
+            }
         }
         
         // Показать уведомление
