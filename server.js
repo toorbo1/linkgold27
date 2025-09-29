@@ -44,28 +44,36 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Тестовые данные
+  // Тестовый администратор
   const adminId = 8036875641;
-  
   db.run(`INSERT OR IGNORE INTO users (telegram_id, first_name, last_name, username, referral_code) 
           VALUES (?, ?, ?, ?, ?)`, 
           [adminId, 'Admin', 'User', 'admin', 'admin_ref']);
 
+  // Тестовые посты
   db.run(`INSERT OR IGNORE INTO posts (title, content, author_id) VALUES 
-          ('Добро пожаловать!', 'Рады видеть вас в нашем сообществе.', ?)`, 
+          ('Добро пожаловать в наше сообщество!', 'Мы рады приветствовать вас в нашем Telegram-сообществе. Здесь вы найдете много интересной информации и сможете общаться с единомышленниками.', ?)`, 
+          [adminId]);
+  
+  db.run(`INSERT OR IGNORE INTO posts (title, content, author_id) VALUES 
+          ('Как работает реферальная система', 'Приглашайте друзей и получайте бонусы за каждого приглашенного пользователя!', ?)`, 
           [adminId]);
 });
 
 // API Routes
+
+// Получить все посты
 app.get('/api/posts', (req, res) => {
   db.all(`SELECT * FROM posts ORDER BY created_at DESC`, (err, rows) => {
     if (err) {
+      console.error('Error fetching posts:', err);
       return res.status(500).json({ error: err.message });
     }
     res.json(rows || []);
   });
 });
 
+// Создать новый пост
 app.post('/api/posts', (req, res) => {
   const { title, content, author_id } = req.body;
   
@@ -76,12 +84,32 @@ app.post('/api/posts', (req, res) => {
   db.run(`INSERT INTO posts (title, content, author_id) VALUES (?, ?, ?)`,
          [title, content, author_id], function(err) {
     if (err) {
+      console.error('Error creating post:', err);
       return res.status(500).json({ error: err.message });
     }
-    res.json({ id: this.lastID, message: 'Post created' });
+    res.json({ id: this.lastID, message: 'Post created successfully' });
   });
 });
 
+// Удалить пост
+app.delete('/api/posts/:id', (req, res) => {
+  const postId = req.params.id;
+  
+  db.run(`DELETE FROM posts WHERE id = ?`, [postId], function(err) {
+    if (err) {
+      console.error('Error deleting post:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    res.json({ message: 'Post deleted successfully' });
+  });
+});
+
+// Регистрация/логин пользователя
 app.post('/api/users', (req, res) => {
   const { telegram_id, first_name, last_name, username, photo_url } = req.body;
   
@@ -97,6 +125,7 @@ app.post('/api/users', (req, res) => {
           [telegram_id, first_name, last_name, username, photo_url, referral_code], 
           function(err) {
     if (err) {
+      console.error('Error creating user:', err);
       return res.status(500).json({ error: err.message });
     }
     
@@ -104,11 +133,30 @@ app.post('/api/users', (req, res) => {
       id: this.lastID, 
       telegram_id,
       referral_code,
-      message: 'User registered' 
+      message: 'User registered successfully' 
     });
   });
 });
 
+// Получить пользователя по Telegram ID
+app.get('/api/users/:telegram_id', (req, res) => {
+  const telegramId = req.params.telegram_id;
+  
+  db.get(`SELECT * FROM users WHERE telegram_id = ?`, [telegramId], (err, row) => {
+    if (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    
+    if (!row) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(row);
+  });
+});
+
+// Получить реферальную статистику
 app.get('/api/users/:telegram_id/referrals', (req, res) => {
   const telegramId = req.params.telegram_id;
   
@@ -116,6 +164,7 @@ app.get('/api/users/:telegram_id/referrals', (req, res) => {
           JOIN users u ON r.referrer_id = u.id 
           WHERE u.telegram_id = ?`, [telegramId], (err, row) => {
     if (err) {
+      console.error('Error fetching referrals:', err);
       return res.status(500).json({ error: err.message });
     }
 
@@ -133,12 +182,12 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    message: 'Server is running'
+    message: 'Server is running successfully'
   });
 });
 
 // Serve frontend
-app.get('/', (req, res) => {
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -147,4 +196,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`👤 Admin ID: 8036875641`);
+  console.log(`🌐 Open in browser: http://localhost:${PORT}`);
 });
+
+module.exports = app;
