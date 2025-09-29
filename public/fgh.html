@@ -4,762 +4,306 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Community</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --primary-color: #0088cc;
-            --secondary-color: #f0f0f0;
-            --text-color: #333;
-            --light-text: #777;
-            --border-color: #ddd;
-            --success-color: #28a745;
-            --error-color: #dc3545;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f9f9f9;
-            color: var(--text-color);
-            line-height: 1.6;
-            padding-bottom: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        header {
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid var(--border-color);
-        }
-        
-        .login-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .login-btn:hover {
-            background-color: #006699;
-        }
-        
-        .logout-btn {
-            background-color: var(--error-color);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        main {
-            padding: 40px 0;
-        }
-        
-        .section {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: var(--primary-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-        
-        .profile-info {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-        }
-        
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            justify-self: center;
-            border: 2px solid var(--primary-color);
-        }
-        
-        .profile-details {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .profile-name {
-            font-size: 22px;
-            font-weight: 600;
-        }
-        
-        .referral-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .referral-link {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .referral-input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        
-        .copy-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .copy-btn:hover {
-            background-color: #006699;
-        }
-        
-        .referral-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .stat-card {
-            background-color: var(--secondary-color);
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: var(--light-text);
-        }
-        
-        .posts-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .post {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .post:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-        
-        .post-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        .post-date {
-            color: var(--light-text);
-            font-size: 14px;
-        }
-        
-        .post-content {
-            line-height: 1.7;
-        }
-        
-        .admin-panel {
-            background-color: #fff9e6;
-            border: 1px solid #ffd700;
-        }
-        
-        .admin-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .form-label {
-            font-weight: 500;
-        }
-        
-        .form-input, .form-textarea {
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        
-        .form-textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-        
-        .submit-btn {
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 16px;
-            align-self: flex-start;
-            transition: background-color 0.3s;
-        }
-        
-        .submit-btn:hover {
-            background-color: #218838;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background-color: var(--success-color);
-            color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-            max-width: 300px;
-        }
-        
-        .notification.error {
-            background-color: var(--error-color);
-        }
-        
-        .notification.show {
-            opacity: 1;
-        }
-        
-        footer {
-            background-color: white;
-            border-top: 1px solid var(--border-color);
-            padding: 20px 0;
-            text-align: center;
-            color: var(--light-text);
-            font-size: 14px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--light-text);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--light-text);
-        }
-        
-        @media (max-width: 768px) {
-            .profile-info {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            
-            .referral-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .referral-link {
-                flex-direction: column;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                gap: 15px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: #f8f9fa; color: #333; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .section { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        button { background: #0088cc; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        button:hover { background: #006699; }
+        button.logout { background: #dc3545; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; }
+        input:focus, textarea:focus { border-color: #0088cc; outline: none; }
+        .post { border: 2px solid #f1f3f4; padding: 20px; margin: 15px 0; border-radius: 12px; background: #fafbfc; }
+        .post h3 { color: #0088cc; margin-bottom: 10px; }
+        .post small { color: #6c757d; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .stats { display: flex; gap: 20px; margin: 15px 0; }
+        .stat { background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; flex: 1; }
+        h1 { color: #0088cc; }
+        h2 { color: #0088cc; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">Telegram Community</div>
-                <div class="user-info">
-                    <div id="userDisplay" class="hidden">
-                        <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
-                        <span id="userName"></span>
-                        <button id="logoutButton" class="logout-btn">Выйти</button>
-                    </div>
-                    <button id="loginButton" class="login-btn">Войти через Telegram</button>
+    <div class="container">
+        <header>
+            <h1>🤖 Telegram Community</h1>
+            <div class="user-info">
+                <div id="userDisplay" class="hidden">
+                    <span id="userName"></span>
+                    <button class="logout" id="logoutButton">Выйти</button>
                 </div>
+                <button id="loginButton">Войти через Telegram</button>
             </div>
-        </div>
-    </header>
-    
-    <main class="container">
+        </header>
+
         <section id="profileSection" class="section hidden">
-            <h2 class="section-title">Профиль</h2>
-            <div class="profile-info">
-                <img id="profileAvatar" class="profile-avatar" src="" alt="Profile Avatar">
-                <div class="profile-details">
-                    <div class="profile-name" id="profileName"></div>
-                    <div id="profileUsername"></div>
-                    <div id="profileId"></div>
-                </div>
-            </div>
+            <h2>👤 Профиль</h2>
+            <div id="profileInfo"></div>
         </section>
-        
+
         <section id="referralSection" class="section hidden">
-            <h2 class="section-title">Реферальная система</h2>
-            <div class="referral-section">
-                <p>Приглашайте друзей и получайте бонусы!</p>
-                <div class="referral-link">
-                    <input type="text" id="referralLink" class="referral-input" readonly>
-                    <button id="copyButton" class="copy-btn">Копировать</button>
+            <h2>🎯 Реферальная система</h2>
+            <p>Приглашайте друзей и получайте бонусы!</p>
+            <input type="text" id="referralLink" readonly>
+            <button id="copyButton">📋 Копировать ссылку</button>
+            <div class="stats">
+                <div class="stat">
+                    <div style="font-size: 24px; font-weight: bold;" id="referralsCount">0</div>
+                    <div>Приглашено друзей</div>
                 </div>
-                <div class="referral-stats">
-                    <div class="stat-card">
-                        <div class="stat-value" id="referralsCount">0</div>
-                        <div class="stat-label">Приглашено друзей</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="referralBonus">0</div>
-                        <div class="stat-label">Ваш бонус</div>
-                    </div>
+                <div class="stat">
+                    <div style="font-size: 24px; font-weight: bold;" id="referralBonus">0</div>
+                    <div>Ваш бонус</div>
                 </div>
             </div>
         </section>
-        
+
         <section id="postsSection" class="section">
-            <h2 class="section-title">Последние новости</h2>
-            <div class="posts-container" id="postsContainer">
-                <div class="loading">Загрузка новостей...</div>
-            </div>
+            <h2>📰 Последние новости</h2>
+            <div id="postsContainer">Загрузка новостей...</div>
         </section>
-        
-        <section id="adminSection" class="section admin-panel hidden">
-            <h2 class="section-title">Админ-панель</h2>
-            <form id="postForm" class="admin-form">
-                <div class="form-group">
-                    <label for="postTitle" class="form-label">Заголовок поста</label>
-                    <input type="text" id="postTitle" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="postContent" class="form-label">Содержание поста</label>
-                    <textarea id="postContent" class="form-textarea" required></textarea>
-                </div>
-                <button type="submit" class="submit-btn">Опубликовать</button>
+
+        <section id="adminSection" class="section hidden">
+            <h2>⚙️ Админ-панель</h2>
+            <form id="postForm">
+                <input type="text" id="postTitle" placeholder="Заголовок поста" required>
+                <textarea id="postContent" placeholder="Содержание поста" rows="6" required></textarea>
+                <button type="submit">📤 Опубликовать</button>
             </form>
         </section>
-    </main>
-    
-    <footer>
-        <div class="container">
-            <p>© 2023 Telegram Community. Все права защищены.</p>
-        </div>
-    </footer>
-    
-    <div id="notification" class="notification">Текст уведомления</div>
-    
+    </div>
+
     <script>
-        // API базовый URL
-        const API_BASE = window.location.origin + '/api';
-        
-        // DOM элементы
-        const loginButton = document.getElementById('loginButton');
-        const logoutButton = document.getElementById('logoutButton');
-        const userDisplay = document.getElementById('userDisplay');
-        const userAvatar = document.getElementById('userAvatar');
-        const userName = document.getElementById('userName');
-        const profileSection = document.getElementById('profileSection');
-        const profileAvatar = document.getElementById('profileAvatar');
-        const profileName = document.getElementById('profileName');
-        const profileUsername = document.getElementById('profileUsername');
-        const profileId = document.getElementById('profileId');
-        const referralSection = document.getElementById('referralSection');
-        const referralLink = document.getElementById('referralLink');
-        const copyButton = document.getElementById('copyButton');
-        const referralsCount = document.getElementById('referralsCount');
-        const referralBonus = document.getElementById('referralBonus');
-        const postsContainer = document.getElementById('postsContainer');
-        const adminSection = document.getElementById('adminSection');
-        const postForm = document.getElementById('postForm');
-        const notification = document.getElementById('notification');
-        
-        // Переменные состояния
+        const API_BASE = window.location.origin;
         let user = null;
-        let posts = [];
-        const ADMIN_ID = 8036875641; // ID администратора
-        
-        // Инициализация приложения
+        const ADMIN_ID = 8036875641;
+
         async function initApp() {
-            // Проверяем, есть ли сохраненные данные пользователя
+            console.log('Initializing app...');
+            
+            // Проверяем соединение с сервером
+            try {
+                const healthResponse = await fetch(API_BASE + '/health');
+                if (!healthResponse.ok) {
+                    throw new Error('Server health check failed');
+                }
+                console.log('Server health check passed');
+            } catch (error) {
+                console.error('Server connection failed:', error);
+                document.getElementById('postsContainer').innerHTML = 
+                    '<div style="color: #dc3545; text-align: center; padding: 20px;">⚠️ Не удалось подключиться к серверу</div>';
+                return;
+            }
+
+            await loadPosts();
+            setupEventListeners();
+            
             const savedUser = localStorage.getItem('telegramUser');
             if (savedUser) {
                 try {
                     user = JSON.parse(savedUser);
-                    await handleUserLogin(user);
+                    handleUserLogin(user);
                 } catch (e) {
-                    console.error('Ошибка при загрузке пользователя:', e);
+                    console.error('Error parsing saved user:', e);
                     localStorage.removeItem('telegramUser');
                 }
             }
-            
-            // Загружаем посты
-            await loadPosts();
-            
-            // Настройка обработчиков событий
-            setupEventListeners();
         }
-        
-        // Настройка обработчиков событий
+
         function setupEventListeners() {
-            loginButton.addEventListener('click', handleTelegramLogin);
-            logoutButton.addEventListener('click', handleLogout);
-            copyButton.addEventListener('click', copyReferralLink);
-            postForm.addEventListener('submit', handlePostSubmit);
+            document.getElementById('loginButton').addEventListener('click', handleLogin);
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+            document.getElementById('copyButton').addEventListener('click', copyReferralLink);
+            document.getElementById('postForm').addEventListener('submit', handlePostSubmit);
         }
-        
-        // Обработка входа через Telegram
-        async function handleTelegramLogin() {
+
+        async function handleLogin() {
+            const testUser = {
+                id: Math.floor(Math.random() * 1000000000),
+                first_name: 'Тестовый',
+                last_name: 'Пользователь',
+                username: 'test_user'
+            };
+
             try {
-                // В реальном приложении здесь будет логика авторизации через Telegram
-                // Для демонстрации используем тестовые данные
-                const testUser = {
-                    id: Math.floor(Math.random() * 1000000000),
-                    first_name: 'Тестовый',
-                    last_name: 'Пользователь',
-                    username: 'test_user',
-                    photo_url: 'https://via.placeholder.com/150/0088cc/FFFFFF?text=User'
-                };
-                
-                // Регистрируем пользователя в базе данных
-                const response = await fetch(`${API_BASE}/users`, {
+                const response = await fetch(API_BASE + '/api/users', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         telegram_id: testUser.id,
                         first_name: testUser.first_name,
                         last_name: testUser.last_name,
-                        username: testUser.username,
-                        photo_url: testUser.photo_url
+                        username: testUser.username
                     })
                 });
-                
+
                 if (response.ok) {
-                    await handleUserLogin(testUser);
-                    showNotification('Успешный вход через Telegram!');
+                    user = testUser;
+                    localStorage.setItem('telegramUser', JSON.stringify(user));
+                    handleUserLogin(user);
+                    showMessage('✅ Вход выполнен успешно!');
                 } else {
-                    throw new Error('Ошибка регистрации пользователя');
+                    throw new Error('Registration failed');
                 }
             } catch (error) {
-                console.error('Ошибка входа:', error);
-                showNotification('Ошибка входа', true);
+                console.error('Login error:', error);
+                showMessage('❌ Ошибка входа', true);
             }
         }
-        
-        // Обработка выхода
+
         function handleLogout() {
             user = null;
             localStorage.removeItem('telegramUser');
-            
-            // Сбрасываем UI
-            loginButton.classList.remove('hidden');
-            userDisplay.classList.add('hidden');
-            profileSection.classList.add('hidden');
-            referralSection.classList.add('hidden');
-            adminSection.classList.add('hidden');
-            
-            showNotification('Вы вышли из системы');
+            document.getElementById('userDisplay').classList.add('hidden');
+            document.getElementById('loginButton').classList.remove('hidden');
+            document.getElementById('profileSection').classList.add('hidden');
+            document.getElementById('referralSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
+            showMessage('👋 Вы вышли из системы');
         }
-        
-        // Обработка данных пользователя после входа
-        async function handleUserLogin(userData) {
-            user = userData;
+
+        function handleUserLogin(userData) {
+            document.getElementById('userDisplay').classList.remove('hidden');
+            document.getElementById('loginButton').classList.add('hidden');
+            document.getElementById('profileSection').classList.remove('hidden');
+            document.getElementById('referralSection').classList.remove('hidden');
             
-            // Сохраняем пользователя в localStorage
-            localStorage.setItem('telegramUser', JSON.stringify(user));
+            document.getElementById('userName').textContent = `${userData.first_name} ${userData.last_name}`;
+            document.getElementById('profileInfo').innerHTML = `
+                <p><strong>Имя:</strong> ${userData.first_name} ${userData.last_name}</p>
+                <p><strong>Username:</strong> ${userData.username || 'Не указан'}</p>
+                <p><strong>ID:</strong> ${userData.id}</p>
+            `;
             
-            // Обновляем UI
-            loginButton.classList.add('hidden');
-            userDisplay.classList.remove('hidden');
+            document.getElementById('referralLink').value = `${window.location.origin}?ref=${userData.id}`;
             
-            // Устанавливаем аватар
-            if (user.photo_url) {
-                userAvatar.src = user.photo_url;
-                profileAvatar.src = user.photo_url;
-            } else {
-                // Заглушка для аватара
-                const placeholder = 'https://via.placeholder.com/150/cccccc/969696?text=No+Avatar';
-                userAvatar.src = placeholder;
-                profileAvatar.src = placeholder;
+            if (userData.id === ADMIN_ID) {
+                document.getElementById('adminSection').classList.remove('hidden');
             }
             
-            // Устанавливаем имя
-            const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-            userName.textContent = fullName;
-            profileName.textContent = fullName;
-            
-            // Устанавливаем username
-            if (user.username) {
-                profileUsername.textContent = `@${user.username}`;
-            } else {
-                profileUsername.textContent = 'Имя пользователя не указано';
-            }
-            
-            // Устанавливаем ID
-            profileId.textContent = `ID: ${user.id}`;
-            
-            // Показываем профиль и реферальную секцию
-            profileSection.classList.remove('hidden');
-            referralSection.classList.remove('hidden');
-            
-            // Генерируем реферальную ссылку
-            const refLink = `${window.location.origin}?ref=${user.id}`;
-            referralLink.value = refLink;
-            
-            // Загружаем реферальную статистику
-            await loadReferralStats(user.id);
-            
-            // Проверяем, является ли пользователь администратором
-            if (user.id === ADMIN_ID) {
-                adminSection.classList.remove('hidden');
-            } else {
-                adminSection.classList.add('hidden');
-            }
+            loadReferralStats(userData.id);
         }
-        
-        // Загрузка постов
+
         async function loadPosts() {
             try {
-                const response = await fetch(`${API_BASE}/posts`);
-                if (response.ok) {
-                    posts = await response.json();
-                    renderPosts();
-                } else {
-                    throw new Error('Ошибка загрузки постов');
+                const response = await fetch(API_BASE + '/api/posts');
+                if (!response.ok) throw new Error('Failed to fetch posts');
+                
+                const posts = await response.json();
+                const container = document.getElementById('postsContainer');
+                
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<div class="post"><p>Пока нет новостей. Будьте первым, кто опубликует что-то интересное!</p></div>';
+                    return;
                 }
-            } catch (error) {
-                console.error('Ошибка загрузки постов:', error);
-                postsContainer.innerHTML = '<div class="empty-state">Ошибка загрузки новостей</div>';
-            }
-        }
-        
-        // Отображение постов
-        function renderPosts() {
-            postsContainer.innerHTML = '';
-            
-            if (posts.length === 0) {
-                postsContainer.innerHTML = '<div class="empty-state">Пока нет новостей.</div>';
-                return;
-            }
-            
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.className = 'post';
                 
-                const date = new Date(post.created_at).toLocaleDateString('ru-RU', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                postElement.innerHTML = `
-                    <div class="post-header">
-                        <div class="post-title">${post.title}</div>
-                        <div class="post-date">${date}</div>
+                container.innerHTML = posts.map(post => `
+                    <div class="post">
+                        <h3>${post.title}</h3>
+                        <p>${post.content}</p>
+                        <small>Опубликовано: ${new Date(post.created_at).toLocaleDateString('ru-RU')}</small>
                     </div>
-                    <div class="post-content">${post.content}</div>
-                `;
-                
-                postsContainer.appendChild(postElement);
-            });
+                `).join('');
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('postsContainer').innerHTML = 
+                    '<div class="post" style="color: #dc3545;">❌ Ошибка загрузки новостей. Пожалуйста, обновите страницу.</div>';
+            }
         }
-        
-        // Загрузка реферальной статистики
+
         async function loadReferralStats(userId) {
             try {
-                const response = await fetch(`${API_BASE}/users/${userId}/referrals`);
-                if (response.ok) {
-                    const stats = await response.json();
-                    referralsCount.textContent = stats.referral_count;
-                    referralBonus.textContent = stats.bonus;
-                } else {
-                    throw new Error('Ошибка загрузки статистики');
-                }
+                const response = await fetch(`${API_BASE}/api/users/${userId}/referrals`);
+                if (!response.ok) throw new Error('Failed to fetch stats');
+                
+                const stats = await response.json();
+                document.getElementById('referralsCount').textContent = stats.referral_count;
+                document.getElementById('referralBonus').textContent = stats.bonus;
             } catch (error) {
-                console.error('Ошибка загрузки статистики:', error);
-                referralsCount.textContent = '0';
-                referralBonus.textContent = '0';
+                console.error('Error loading stats:', error);
+                document.getElementById('referralsCount').textContent = '0';
+                document.getElementById('referralBonus').textContent = '0';
             }
         }
-        
-        // Копирование реферальной ссылки
+
         function copyReferralLink() {
-            referralLink.select();
-            referralLink.setSelectionRange(0, 99999); // Для мобильных устройств
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showNotification('Ссылка скопирована в буфер обмена!');
-                } else {
-                    showNotification('Не удалось скопировать ссылку', true);
-                }
-            } catch (err) {
-                console.error('Ошибка при копировании:', err);
-                showNotification('Ошибка при копировании', true);
-            }
+            const input = document.getElementById('referralLink');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            showMessage('✅ Ссылка скопирована в буфер обмена!');
         }
-        
-        // Обработка отправки поста
+
         async function handlePostSubmit(e) {
             e.preventDefault();
             
             if (!user || user.id !== ADMIN_ID) {
-                showNotification('Ошибка: у вас нет прав для публикации постов', true);
+                showMessage('❌ У вас нет прав для публикации постов', true);
                 return;
             }
-            
-            const title = document.getElementById('postTitle').value;
-            const content = document.getElementById('postContent').value;
-            
-            if (!title.trim() || !content.trim()) {
-                showNotification('Заполните все поля', true);
+
+            const title = document.getElementById('postTitle').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+
+            if (!title || !content) {
+                showMessage('❌ Заполните все поля', true);
                 return;
             }
-            
+
             try {
-                const response = await fetch(`${API_BASE}/posts`, {
+                const response = await fetch(API_BASE + '/api/posts', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         title,
                         content,
                         author_id: user.id
                     })
                 });
-                
+
                 if (response.ok) {
-                    // Очищаем форму
-                    postForm.reset();
-                    
-                    // Перезагружаем посты
+                    document.getElementById('postForm').reset();
                     await loadPosts();
-                    
-                    showNotification('Пост успешно опубликован!');
+                    showMessage('✅ Пост успешно опубликован!');
                 } else {
-                    throw new Error('Ошибка публикации поста');
+                    throw new Error('Failed to create post');
                 }
             } catch (error) {
-                console.error('Ошибка публикации поста:', error);
-                showNotification('Ошибка публикации поста', true);
+                console.error('Error creating post:', error);
+                showMessage('❌ Ошибка при публикации поста', true);
             }
         }
-        
-        // Показать уведомление
-        function showNotification(message, isError = false) {
-            notification.textContent = message;
-            notification.className = 'notification';
-            
-            if (isError) {
-                notification.classList.add('error');
-            }
-            
-            notification.classList.add('show');
+
+        function showMessage(message, isError = false) {
+            const alert = document.createElement('div');
+            alert.textContent = message;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${isError ? '#dc3545' : '#28a745'};
+                color: white;
+                border-radius: 8px;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            `;
+            document.body.appendChild(alert);
             
             setTimeout(() => {
-                notification.classList.remove('show');
+                alert.remove();
             }, 3000);
         }
-        
-        // Инициализация приложения после загрузки DOM
-        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Initialize app when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
