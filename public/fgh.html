@@ -5,42 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Community</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
         .card { background: white; padding: 20px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        button { background: #0088cc; color: white; border: none; padding: 10px 15px; margin: 5px; border-radius: 5px; cursor: pointer; }
-        input, textarea { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #0088cc; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
         .hidden { display: none; }
         .post { border: 1px solid #eee; padding: 15px; margin: 10px 0; border-radius: 5px; }
-        .admin-badge { background: #ff4757; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
-            <h1>🤖 Telegram Community</h1>
-            <div id="authSection">
-                <button onclick="login(123456)">Войти как пользователь</button>
-                <button onclick="login(8036875641)">Войти как Админ</button>
-            </div>
-            <div id="userSection" class="hidden">
-                <h3>👤 Профиль</h3>
-                <div id="userInfo"></div>
-                <button onclick="logout()">Выйти</button>
-            </div>
-        </div>
-
-        <div id="adminSection" class="card hidden">
-            <h3>⚙️ Админ-панель</h3>
-            <input type="text" id="postTitle" placeholder="Заголовок поста">
-            <textarea id="postContent" placeholder="Текст поста" rows="4"></textarea>
-            <button onclick="createPost()">📤 Опубликовать</button>
+            <h1>✅ Server is Running!</h1>
+            <p>Telegram Community Application</p>
+            <button onclick="testConnection()">Test Connection</button>
+            <div id="status"></div>
         </div>
 
         <div class="card">
-            <h3>📰 Новости сообщества</h3>
-            <div id="postsContainer">Загрузка...</div>
+            <h3>Demo Interface</h3>
+            <button onclick="login(123456789)">Login as User</button>
+            <button onclick="login(8036875641)">Login as Admin</button>
+            
+            <div id="adminPanel" class="hidden">
+                <h4>Admin Panel</h4>
+                <input type="text" id="postTitle" placeholder="Post title">
+                <textarea id="postContent" placeholder="Post content" rows="3"></textarea>
+                <button onclick="createPost()">Create Post</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Posts</h3>
+            <div id="postsContainer">Loading...</div>
         </div>
     </div>
 
@@ -48,31 +46,36 @@
         let currentUser = null;
         const ADMIN_ID = 8036875641;
 
-        // Загрузка постов
+        async function testConnection() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                document.getElementById('status').innerHTML = 
+                    `<p style="color: green;">✅ Connected: ${data.message}</p>`;
+            } catch (error) {
+                document.getElementById('status').innerHTML = 
+                    `<p style="color: red;">❌ Connection failed</p>`;
+            }
+        }
+
         async function loadPosts() {
             try {
                 const response = await fetch('/api/posts');
                 const posts = await response.json();
                 displayPosts(posts);
             } catch (error) {
-                document.getElementById('postsContainer').innerHTML = 'Ошибка загрузки новостей';
+                document.getElementById('postsContainer').innerHTML = 'Error loading posts';
             }
         }
 
         function displayPosts(posts) {
             const container = document.getElementById('postsContainer');
-            if (posts.length === 0) {
-                container.innerHTML = '<p>Пока нет новостей</p>';
-                return;
-            }
-
             container.innerHTML = posts.map(post => `
                 <div class="post">
                     <h4>${post.title}</h4>
                     <p>${post.content}</p>
-                    <small>${new Date(post.created_at).toLocaleDateString('ru-RU')}</small>
                     ${currentUser && currentUser.id === ADMIN_ID ? 
-                        `<button onclick="deletePost(${post.id})" style="background: #ff4757;">Удалить</button>` : ''}
+                        `<button onclick="deletePost(${post.id})">Delete</button>` : ''}
                 </div>
             `).join('');
         }
@@ -84,52 +87,24 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         telegram_id: userId,
-                        first_name: userId === ADMIN_ID ? 'Администратор' : 'Пользователь',
-                        last_name: 'Тестовый',
-                        username: userId === ADMIN_ID ? 'admin' : 'user'
+                        first_name: userId === ADMIN_ID ? 'Admin' : 'User'
                     })
                 });
                 
                 currentUser = await response.json();
-                showUserInterface();
+                if (userId === ADMIN_ID) {
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                }
                 loadPosts();
+                alert('Logged in successfully!');
             } catch (error) {
-                alert('Ошибка входа');
+                alert('Login failed');
             }
-        }
-
-        function showUserInterface() {
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('userSection').classList.remove('hidden');
-            
-            document.getElementById('userInfo').innerHTML = `
-                <p><strong>ID:</strong> ${currentUser.id}</p>
-                <p><strong>Имя:</strong> ${currentUser.first_name} ${currentUser.last_name}</p>
-                <p><strong>Роль:</strong> ${currentUser.id === ADMIN_ID ? '<span class="admin-badge">АДМИНИСТРАТОР</span>' : 'Пользователь'}</p>
-            `;
-
-            if (currentUser.id === ADMIN_ID) {
-                document.getElementById('adminSection').classList.remove('hidden');
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('authSection').classList.remove('hidden');
-            document.getElementById('userSection').classList.add('hidden');
-            document.getElementById('adminSection').classList.add('hidden');
         }
 
         async function createPost() {
-            if (!currentUser || currentUser.id !== ADMIN_ID) return;
-
             const title = document.getElementById('postTitle').value;
             const content = document.getElementById('postContent').value;
-
-            if (!title || !content) {
-                alert('Заполните все поля');
-                return;
-            }
 
             try {
                 await fetch('/api/posts', {
@@ -145,27 +120,24 @@
                 document.getElementById('postTitle').value = '';
                 document.getElementById('postContent').value = '';
                 loadPosts();
-                alert('Пост опубликован!');
+                alert('Post created!');
             } catch (error) {
-                alert('Ошибка публикации');
+                alert('Error creating post');
             }
         }
 
         async function deletePost(postId) {
-            if (!currentUser || currentUser.id !== ADMIN_ID) return;
-
-            if (!confirm('Удалить этот пост?')) return;
-
             try {
                 await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
                 loadPosts();
-                alert('Пост удален!');
+                alert('Post deleted!');
             } catch (error) {
-                alert('Ошибка удаления');
+                alert('Error deleting post');
             }
         }
 
-        // Инициализация
+        // Initial load
+        testConnection();
         loadPosts();
     </script>
 </body>
