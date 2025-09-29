@@ -1,22 +1,15 @@
 {
-  "name": "telegram-community-site",
+  "name": "telegram-community",
   "version": "1.0.0",
-  "description": "Telegram Community Site with admin panel and referral system",
+  "description": "Telegram Community Site",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2",
-    "sqlite3": "^5.1.6"
+    "express": "^4.18.2"
   },
   "engines": {
     "node": ">=16.0.0"
-  },
-  "keywords": ["telegram", "community", "referral"],
-  "author": "Your Name",
-  "license": "MIT"
+  }
 }

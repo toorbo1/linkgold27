@@ -1,79 +1,39 @@
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(express.static('public'));
 
-// Инициализация базы данных
-const db = new sqlite3.Database('database.sqlite');
+// Данные в памяти (для демонстрации)
+let posts = [
+  {
+    id: 1,
+    title: 'Добро пожаловать в наше сообщество!',
+    content: 'Мы рады приветствовать вас в нашем Telegram-сообществе.',
+    author_id: 8036875641,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    title: 'Как работает реферальная система',
+    content: 'Приглашайте друзей и получайте бонусы за каждого приглашенного пользователя!',
+    author_id: 8036875641,
+    created_at: new Date().toISOString()
+  }
+];
 
-// Инициализация таблиц
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegram_id INTEGER UNIQUE,
-    first_name TEXT,
-    last_name TEXT,
-    username TEXT,
-    photo_url TEXT,
-    referral_code TEXT UNIQUE,
-    referred_by INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    author_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS referrals (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    referrer_id INTEGER,
-    referred_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  // Тестовый администратор
-  const adminId = 8036875641;
-  db.run(`INSERT OR IGNORE INTO users (telegram_id, first_name, last_name, username, referral_code) 
-          VALUES (?, ?, ?, ?, ?)`, 
-          [adminId, 'Admin', 'User', 'admin', 'admin_ref']);
-
-  // Тестовые посты
-  db.run(`INSERT OR IGNORE INTO posts (title, content, author_id) VALUES 
-          ('Добро пожаловать в наше сообщество!', 'Мы рады приветствовать вас в нашем Telegram-сообществе. Здесь вы найдете много интересной информации и сможете общаться с единомышленниками.', ?)`, 
-          [adminId]);
-  
-  db.run(`INSERT OR IGNORE INTO posts (title, content, author_id) VALUES 
-          ('Как работает реферальная система', 'Приглашайте друзей и получайте бонусы за каждого приглашенного пользователя!', ?)`, 
-          [adminId]);
-});
+let users = [];
+const ADMIN_ID = 8036875641;
 
 // API Routes
-
-// Получить все посты
 app.get('/api/posts', (req, res) => {
-  db.all(`SELECT * FROM posts ORDER BY created_at DESC`, (err, rows) => {
-    if (err) {
-      console.error('Error fetching posts:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows || []);
-  });
+  res.json(posts);
 });
 
-// Создать новый пост
 app.post('/api/posts', (req, res) => {
   const { title, content, author_id } = req.body;
   
@@ -81,35 +41,31 @@ app.post('/api/posts', (req, res) => {
     return res.status(400).json({ error: 'Title and content are required' });
   }
 
-  db.run(`INSERT INTO posts (title, content, author_id) VALUES (?, ?, ?)`,
-         [title, content, author_id], function(err) {
-    if (err) {
-      console.error('Error creating post:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ id: this.lastID, message: 'Post created successfully' });
-  });
+  const newPost = {
+    id: posts.length + 1,
+    title,
+    content,
+    author_id,
+    created_at: new Date().toISOString()
+  };
+
+  posts.unshift(newPost);
+  res.json({ id: newPost.id, message: 'Post created successfully' });
 });
 
-// Удалить пост
 app.delete('/api/posts/:id', (req, res) => {
-  const postId = req.params.id;
+  const postId = parseInt(req.params.id);
+  const initialLength = posts.length;
   
-  db.run(`DELETE FROM posts WHERE id = ?`, [postId], function(err) {
-    if (err) {
-      console.error('Error deleting post:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (this.changes === 0) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-    
-    res.json({ message: 'Post deleted successfully' });
-  });
+  posts = posts.filter(post => post.id !== postId);
+  
+  if (posts.length === initialLength) {
+    return res.status(404).json({ error: 'Post not found' });
+  }
+  
+  res.json({ message: 'Post deleted successfully' });
 });
 
-// Регистрация/логин пользователя
 app.post('/api/users', (req, res) => {
   const { telegram_id, first_name, last_name, username, photo_url } = req.body;
   
@@ -117,72 +73,47 @@ app.post('/api/users', (req, res) => {
     return res.status(400).json({ error: 'Telegram ID is required' });
   }
 
-  const referral_code = `ref_${telegram_id}_${Date.now()}`;
-
-  db.run(`INSERT OR REPLACE INTO users 
-          (telegram_id, first_name, last_name, username, photo_url, referral_code) 
-          VALUES (?, ?, ?, ?, ?, ?)`,
-          [telegram_id, first_name, last_name, username, photo_url, referral_code], 
-          function(err) {
-    if (err) {
-      console.error('Error creating user:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    
-    res.json({ 
-      id: this.lastID, 
+  // Проверяем, существует ли пользователь
+  let user = users.find(u => u.telegram_id === telegram_id);
+  
+  if (!user) {
+    user = {
+      id: users.length + 1,
       telegram_id,
-      referral_code,
-      message: 'User registered successfully' 
-    });
+      first_name,
+      last_name,
+      username,
+      photo_url,
+      referral_code: `ref_${telegram_id}_${Date.now()}`,
+      created_at: new Date().toISOString()
+    };
+    users.push(user);
+  }
+
+  res.json({ 
+    ...user,
+    message: 'User registered successfully' 
   });
 });
 
-// Получить пользователя по Telegram ID
-app.get('/api/users/:telegram_id', (req, res) => {
-  const telegramId = req.params.telegram_id;
-  
-  db.get(`SELECT * FROM users WHERE telegram_id = ?`, [telegramId], (err, row) => {
-    if (err) {
-      console.error('Error fetching user:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!row) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(row);
-  });
-});
-
-// Получить реферальную статистику
 app.get('/api/users/:telegram_id/referrals', (req, res) => {
-  const telegramId = req.params.telegram_id;
-  
-  db.get(`SELECT COUNT(*) as referral_count FROM referrals r 
-          JOIN users u ON r.referrer_id = u.id 
-          WHERE u.telegram_id = ?`, [telegramId], (err, row) => {
-    if (err) {
-      console.error('Error fetching referrals:', err);
-      return res.status(500).json({ error: err.message });
-    }
+  // Простая демо-статистика
+  const stats = {
+    referral_count: Math.floor(Math.random() * 10),
+    bonus: Math.floor(Math.random() * 100)
+  };
 
-    const bonus = (row?.referral_count || 0) * 10;
-
-    res.json({
-      referral_count: row?.referral_count || 0,
-      bonus: bonus
-    });
-  });
+  res.json(stats);
 });
 
-// Health check
+// Health check - ОБЯЗАТЕЛЬНО ДЛЯ RAILWAY
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    message: 'Server is running successfully'
+    message: 'Server is running successfully',
+    posts_count: posts.length,
+    users_count: users.length
   });
 });
 
@@ -191,12 +122,16 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`👤 Admin ID: 8036875641`);
-  console.log(`🌐 Open in browser: http://localhost:${PORT}`);
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
 
-module.exports = app;
+// Start server - ВАЖНО: слушаем на 0.0.0.0
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📍 Health check: http://localhost:${PORT}/health`);
+  console.log(`🌐 Open in browser: http://localhost:${PORT}`);
+  console.log(`👤 Admin ID: ${ADMIN_ID}`);
+});

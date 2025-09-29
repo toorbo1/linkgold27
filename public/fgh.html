@@ -275,8 +275,8 @@
         const isTelegramWebApp = typeof window.Telegram !== 'undefined' && window.Telegram.WebApp;
 
         async function initApp() {
-            console.log('Initializing app...');
-            console.log('Is Telegram Web App:', isTelegramWebApp);
+            console.log('🚀 Initializing app...');
+            console.log('📱 Is Telegram Web App:', isTelegramWebApp);
 
             // Проверяем соединение с сервером
             try {
@@ -284,9 +284,10 @@
                 if (!healthResponse.ok) {
                     throw new Error('Server health check failed');
                 }
-                console.log('Server health check passed');
+                const healthData = await healthResponse.json();
+                console.log('✅ Server health:', healthData);
             } catch (error) {
-                console.error('Server connection failed:', error);
+                console.error('❌ Server connection failed:', error);
                 showMessage('⚠️ Не удалось подключиться к серверу', true);
             }
 
@@ -315,17 +316,21 @@
         }
 
         function initTelegramWebApp() {
-            const tg = window.Telegram.WebApp;
-            tg.expand();
-            
-            // Показываем кнопку Telegram входа
-            document.getElementById('loginTelegramButton').classList.remove('hidden');
-            document.getElementById('loginDemoButton').classList.add('hidden');
-            
-            // Если пользователь уже авторизован в Telegram
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const tgUser = tg.initDataUnsafe.user;
-                handleTelegramLogin(tgUser);
+            try {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                
+                // Показываем кнопку Telegram входа
+                document.getElementById('loginTelegramButton').classList.remove('hidden');
+                document.getElementById('loginDemoButton').classList.add('hidden');
+                
+                // Если пользователь уже авторизован в Telegram
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    const tgUser = tg.initDataUnsafe.user;
+                    handleTelegramLogin(tgUser);
+                }
+            } catch (error) {
+                console.error('Error initializing Telegram Web App:', error);
             }
         }
 
@@ -344,7 +349,7 @@
                     first_name: 'Демо',
                     last_name: 'Пользователь',
                     username: 'demo_user',
-                    photo_url: 'https://via.placeholder.com/150/667eea/ffffff?text=Demo'
+                    photo_url: 'https://via.placeholder.com/150/667eea/ffffff?text=User'
                 },
                 {
                     id: ADMIN_ID,
@@ -361,12 +366,17 @@
 
         async function handleTelegramLoginButton() {
             if (isTelegramWebApp) {
-                const tg = window.Telegram.WebApp;
-                const tgUser = tg.initDataUnsafe.user;
-                if (tgUser) {
-                    await registerUser(tgUser);
-                } else {
-                    showMessage('❌ Не удалось получить данные пользователя из Telegram', true);
+                try {
+                    const tg = window.Telegram.WebApp;
+                    const tgUser = tg.initDataUnsafe.user;
+                    if (tgUser) {
+                        await registerUser(tgUser);
+                    } else {
+                        showMessage('❌ Не удалось получить данные пользователя из Telegram', true);
+                    }
+                } catch (error) {
+                    console.error('Telegram login error:', error);
+                    showMessage('❌ Ошибка входа через Telegram', true);
                 }
             } else {
                 showMessage('❌ Эта функция доступна только в Telegram', true);
@@ -375,9 +385,14 @@
 
         async function registerUser(userData) {
             try {
+                console.log('📝 Registering user:', userData);
+                
                 const response = await fetch(API_BASE + '/api/users', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         telegram_id: userData.id,
                         first_name: userData.first_name,
@@ -388,16 +403,18 @@
                 });
 
                 if (response.ok) {
+                    const userResponse = await response.json();
                     user = userData;
                     localStorage.setItem('telegramUser', JSON.stringify(user));
                     handleUserLogin(user);
                     showMessage('✅ Вход выполнен успешно!');
                 } else {
-                    throw new Error('Registration failed');
+                    const errorText = await response.text();
+                    throw new Error(`Registration failed: ${errorText}`);
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showMessage('❌ Ошибка входа', true);
+                console.error('❌ Login error:', error);
+                showMessage('❌ Ошибка входа: ' + error.message, true);
             }
         }
 
@@ -459,6 +476,7 @@
 
         async function loadPosts() {
             try {
+                console.log('📖 Loading posts...');
                 const response = await fetch(API_BASE + '/api/posts');
                 if (!response.ok) throw new Error('Failed to fetch posts');
                 
@@ -488,8 +506,10 @@
                         })}</small>
                     </div>
                 `).join('');
+                
+                console.log(`✅ Loaded ${posts.length} posts`);
             } catch (error) {
-                console.error('Error loading posts:', error);
+                console.error('❌ Error loading posts:', error);
                 document.getElementById('postsContainer').innerHTML = 
                     '<div class="post" style="color: #ff6b6b;">❌ Ошибка загрузки новостей. Пожалуйста, обновите страницу.</div>';
             }
@@ -512,7 +532,7 @@
                     throw new Error('Failed to delete post');
                 }
             } catch (error) {
-                console.error('Error deleting post:', error);
+                console.error('❌ Error deleting post:', error);
                 showMessage('❌ Ошибка при удалении поста', true);
             }
         }
@@ -536,13 +556,16 @@
             const input = document.getElementById('referralLink');
             input.select();
             input.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(input.value).then(() => {
-                showMessage('✅ Ссылка скопирована в буфер обмена!');
-            }).catch(() => {
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(input.value).then(() => {
+                    showMessage('✅ Ссылка скопирована в буфер обмена!');
+                });
+            } else {
                 // Fallback для старых браузеров
                 document.execCommand('copy');
                 showMessage('✅ Ссылка скопирована в буфер обмена!');
-            });
+            }
         }
 
         async function handlePostSubmit(e) {
@@ -564,7 +587,10 @@
             try {
                 const response = await fetch(API_BASE + '/api/posts', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         title,
                         content,
@@ -577,17 +603,23 @@
                     await loadPosts();
                     showMessage('✅ Пост успешно опубликован!');
                 } else {
-                    throw new Error('Failed to create post');
+                    const errorText = await response.text();
+                    throw new Error(`Failed to create post: ${errorText}`);
                 }
             } catch (error) {
-                console.error('Error creating post:', error);
-                showMessage('❌ Ошибка при публикации поста', true);
+                console.error('❌ Error creating post:', error);
+                showMessage('❌ Ошибка при публикации поста: ' + error.message, true);
             }
         }
 
         function showMessage(message, isError = false) {
+            // Удаляем предыдущие сообщения
+            const existingAlerts = document.querySelectorAll('.alert-message');
+            existingAlerts.forEach(alert => alert.remove());
+
             const alert = document.createElement('div');
             alert.textContent = message;
+            alert.className = 'alert-message';
             alert.style.cssText = `
                 position: fixed;
                 top: 20px;
@@ -618,11 +650,7 @@
         window.deletePost = deletePost;
 
         // Initialize app when DOM is loaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
