@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Community</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary-color: #0088cc;
+            --secondary-color: #f0f0f0;
+            --text-color: #333;
+            --light-text: #777;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+        
+        .login-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .login-btn:hover {
+            background-color: #006699;
+        }
+        
+        .logout-btn {
+            background-color: var(--error-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        main {
+            padding: 40px 0;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        .profile-info {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            justify-self: center;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .profile-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .profile-name {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .referral-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .referral-link {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .referral-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background-color: #006699;
+        }
+        
+        .referral-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--light-text);
+        }
+        
+        .posts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .post {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .post:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .post-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .post-date {
+            color: var(--light-text);
+            font-size: 14px;
+        }
+        
+        .post-content {
+            line-height: 1.7;
+        }
+        
+        .admin-panel {
+            background-color: #fff9e6;
+            border: 1px solid #ffd700;
+        }
+        
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-label {
+            font-weight: 500;
+        }
+        
+        .form-input, .form-textarea {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 16px;
+            align-self: flex-start;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 300px;
+        }
+        
+        .notification.error {
+            background-color: var(--error-color);
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        footer {
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            padding: 20px 0;
+            text-align: center;
+            color: var(--light-text);
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--light-text);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--light-text);
+        }
+        
+        @media (max-width: 768px) {
+            .profile-info {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .referral-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .referral-link {
+                flex-direction: column;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Telegram Community</div>
+                <div class="user-info">
+                    <div id="userDisplay" class="hidden">
+                        <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                        <span id="userName"></span>
+                        <button id="logoutButton" class="logout-btn">Выйти</button>
+                    </div>
+                    <button id="loginButton" class="login-btn">Войти через Telegram</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <section id="profileSection" class="section hidden">
+            <h2 class="section-title">Профиль</h2>
+            <div class="profile-info">
+                <img id="profileAvatar" class="profile-avatar" src="" alt="Profile Avatar">
+                <div class="profile-details">
+                    <div class="profile-name" id="profileName"></div>
+                    <div id="profileUsername"></div>
+                    <div id="profileId"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="referralSection" class="section hidden">
+            <h2 class="section-title">Реферальная система</h2>
+            <div class="referral-section">
+                <p>Приглашайте друзей и получайте бонусы!</p>
+                <div class="referral-link">
+                    <input type="text" id="referralLink" class="referral-input" readonly>
+                    <button id="copyButton" class="copy-btn">Копировать</button>
+                </div>
+                <div class="referral-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="referralsCount">0</div>
+                        <div class="stat-label">Приглашено друзей</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="referralBonus">0</div>
+                        <div class="stat-label">Ваш бонус</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="postsSection" class="section">
+            <h2 class="section-title">Последние новости</h2>
+            <div class="posts-container" id="postsContainer">
+                <div class="loading">Загрузка новостей...</div>
+            </div>
+        </section>
+        
+        <section id="adminSection" class="section admin-panel hidden">
+            <h2 class="section-title">Админ-панель</h2>
+            <form id="postForm" class="admin-form">
+                <div class="form-group">
+                    <label for="postTitle" class="form-label">Заголовок поста</label>
+                    <input type="text" id="postTitle" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="postContent" class="form-label">Содержание поста</label>
+                    <textarea id="postContent" class="form-textarea" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Опубликовать</button>
+            </form>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>© 2023 Telegram Community. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <div id="notification" class="notification">Текст уведомления</div>
+    
+    <script>
+        // DOM элементы
+        const loginButton = document.getElementById('loginButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const userDisplay = document.getElementById('userDisplay');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const profileSection = document.getElementById('profileSection');
+        const profileAvatar = document.getElementById('profileAvatar');
+        const profileName = document.getElementById('profileName');
+        const profileUsername = document.getElementById('profileUsername');
+        const profileId = document.getElementById('profileId');
+        const referralSection = document.getElementById('referralSection');
+        const referralLink = document.getElementById('referralLink');
+        const copyButton = document.getElementById('copyButton');
+        const referralsCount = document.getElementById('referralsCount');
+        const referralBonus = document.getElementById('referralBonus');
+        const postsContainer = document.getElementById('postsContainer');
+        const adminSection = document.getElementById('adminSection');
+        const postForm = document.getElementById('postForm');
+        const notification = document.getElementById('notification');
+        
+        // Переменные состояния
+        let user = null;
+        let posts = [];
+        const ADMIN_ID = 8036875641; // ID администратора
+        
+        // Инициализация приложения
+        function initApp() {
+            // Проверяем, есть ли сохраненные данные пользователя
+            const savedUser = localStorage.getItem('telegramUser');
+            if (savedUser) {
+                try {
+                    user = JSON.parse(savedUser);
+                    handleUserLogin(user);
+                } catch (e) {
+                    console.error('Ошибка при загрузке пользователя:', e);
+                    localStorage.removeItem('telegramUser');
+                }
+            }
+            
+            // Загружаем посты
+            loadPosts();
+            
+            // Настройка обработчиков событий
+            setupEventListeners();
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            loginButton.addEventListener('click', handleTelegramLogin);
+            logoutButton.addEventListener('click', handleLogout);
+            copyButton.addEventListener('click', copyReferralLink);
+            postForm.addEventListener('submit', handlePostSubmit);
+        }
+        
+        // Обработка входа через Telegram
+        function handleTelegramLogin() {
+            // В реальном приложении здесь будет логика авторизации через Telegram
+            // Для демонстрации используем тестовые данные
+            const testUser = {
+                id: Math.floor(Math.random() * 1000000000),
+                first_name: 'Тестовый',
+                last_name: 'Пользователь',
+                username: 'test_user',
+                photo_url: 'https://via.placeholder.com/150/0088cc/FFFFFF?text=User'
+            };
+            
+            handleUserLogin(testUser);
+            showNotification('Успешный вход через Telegram!');
+        }
+        
+        // Обработка выхода
+        function handleLogout() {
+            user = null;
+            localStorage.removeItem('telegramUser');
+            
+            // Сбрасываем UI
+            loginButton.classList.remove('hidden');
+            userDisplay.classList.add('hidden');
+            profileSection.classList.add('hidden');
+            referralSection.classList.add('hidden');
+            adminSection.classList.add('hidden');
+            
+            showNotification('Вы вышли из системы');
+        }
+        
+        // Обработка данных пользователя после входа
+        function handleUserLogin(userData) {
+            user = userData;
+            
+            // Сохраняем пользователя в localStorage
+            localStorage.setItem('telegramUser', JSON.stringify(user));
+            
+            // Обновляем UI
+            loginButton.classList.add('hidden');
+            userDisplay.classList.remove('hidden');
+            
+            // Устанавливаем аватар
+            if (user.photo_url) {
+                userAvatar.src = user.photo_url;
+                profileAvatar.src = user.photo_url;
+            } else {
+                // Заглушка для аватара
+                const placeholder = 'https://via.placeholder.com/150/cccccc/969696?text=No+Avatar';
+                userAvatar.src = placeholder;
+                profileAvatar.src = placeholder;
+            }
+            
+            // Устанавливаем имя
+            const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+            userName.textContent = fullName;
+            profileName.textContent = fullName;
+            
+            // Устанавливаем username
+            if (user.username) {
+                profileUsername.textContent = `@${user.username}`;
+            } else {
+                profileUsername.textContent = 'Имя пользователя не указано';
+            }
+            
+            // Устанавливаем ID
+            profileId.textContent = `ID: ${user.id}`;
+            
+            // Показываем профиль и реферальную секцию
+            profileSection.classList.remove('hidden');
+            referralSection.classList.remove('hidden');
+            
+            // Генерируем реферальную ссылку
+            const refLink = `https://t.me/your_bot?start=ref_${user.id}`;
+            referralLink.value = refLink;
+            
+            // Загружаем реферальную статистику
+            loadReferralStats(user.id);
+            
+            // Проверяем, является ли пользователь администратором
+            if (user.id === ADMIN_ID) {
+                adminSection.classList.remove('hidden');
+            } else {
+                adminSection.classList.add('hidden');
+            }
+        }
+        
+        // Загрузка постов
+        function loadPosts() {
+            // В реальном приложении здесь будет запрос к серверу
+            // Для демонстрации используем тестовые данные
+            setTimeout(() => {
+                const testPosts = [
+                    {
+                        id: 1,
+                        title: 'Добро пожаловать в наше сообщество!',
+                        content: 'Мы рады приветствовать вас в нашем Telegram-сообществе. Здесь вы найдете много интересной информации и сможете общаться с единомышленниками.',
+                        date: '2023-10-15T10:30:00Z',
+                        author: 'Администратор'
+                    },
+                    {
+                        id: 2,
+                        title: 'Обновление системы рефералов',
+                        content: 'Мы улучшили нашу реферальную систему. Теперь за каждого приглашенного друга вы получаете дополнительные бонусы. Подробности в разделе "Реферальная система".',
+                        date: '2023-10-10T14:45:00Z',
+                        author: 'Администратор'
+                    },
+                    {
+                        id: 3,
+                        title: 'Новые функции сайта',
+                        content: 'Мы добавили новые функции на наш сайт: улучшенный профиль, статистика рефералов и админ-панель для публикации новостей.',
+                        date: '2023-10-05T09:15:00Z',
+                        author: 'Администратор'
+                    }
+                ];
+                
+                posts = testPosts;
+                renderPosts();
+            }, 1000); // Имитация загрузки с сервера
+        }
+        
+        // Отображение постов
+        function renderPosts() {
+            postsContainer.innerHTML = '';
+            
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<div class="empty-state">Пока нет новостей.</div>';
+                return;
+            }
+            
+            // Сортируем посты по дате (новые сначала)
+            const sortedPosts = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                
+                const date = new Date(post.date).toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                postElement.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-title">${post.title}</div>
+                        <div class="post-date">${date}</div>
+                    </div>
+                    <div class="post-content">${post.content}</div>
+                `;
+                
+                postsContainer.appendChild(postElement);
+            });
+        }
+        
+        // Загрузка реферальной статистики
+        function loadReferralStats(userId) {
+            // В реальном приложении здесь будет запрос к серверу
+            // Для демонстрации используем тестовые данные
+            const stats = {
+                count: Math.floor(Math.random() * 10),
+                bonus: Math.floor(Math.random() * 500)
+            };
+            
+            referralsCount.textContent = stats.count;
+            referralBonus.textContent = stats.bonus;
+        }
+        
+        // Копирование реферальной ссылки
+        function copyReferralLink() {
+            referralLink.select();
+            referralLink.setSelectionRange(0, 99999); // Для мобильных устройств
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showNotification('Ссылка скопирована в буфер обмена!');
+                } else {
+                    showNotification('Не удалось скопировать ссылку', true);
+                }
+            } catch (err) {
+                console.error('Ошибка при копировании:', err);
+                showNotification('Ошибка при копировании', true);
+            }
+        }
+        
+        // Обработка отправки поста
+        function handlePostSubmit(e) {
+            e.preventDefault();
+            
+            if (!user || user.id !== ADMIN_ID) {
+                showNotification('Ошибка: у вас нет прав для публикации постов', true);
+                return;
+            }
+            
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            
+            if (!title.trim() || !content.trim()) {
+                showNotification('Заполните все поля', true);
+                return;
+            }
+            
+            // В реальном приложении здесь будет отправка данных на сервер
+            // Для демонстрации добавляем пост локально
+            const newPost = {
+                id: posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1,
+                title,
+                content,
+                date: new Date().toISOString(),
+                author: 'Администратор'
+            };
+            
+            posts.unshift(newPost);
+            renderPosts();
+            
+            // Очищаем форму
+            postForm.reset();
+            
+            showNotification('Пост успешно опубликован!');
+        }
+        
+        // Показать уведомление
+        function showNotification(message, isError = false) {
+            notification.textContent = message;
+            notification.className = 'notification';
+            
+            if (isError) {
+                notification.classList.add('error');
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Инициализация приложения после загрузки DOM
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
