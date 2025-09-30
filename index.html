@@ -325,7 +325,7 @@
                 await db.collection("posts").doc(postId).delete();
                 alert('✅ Пост удален!');
             } catch (error) {
-                console.error("❌ Ошибка удаления поста:", error);
+                console.error("❌ Ошибка удаления поста: ", error);
                 alert('❌ Ошибка удаления поста');
             }
         }
