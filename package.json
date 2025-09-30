@@ -1,10 +1,4 @@
 {
   "name": "telegram-community",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "vercel dev"
-  },
-  "dependencies": {
-    "@vercel/node": "^2.0.0"
-  }
+  "version": "1.0.0"
 }
